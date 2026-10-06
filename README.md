@@ -3,7 +3,6 @@
 
 **Autora:** Hanna Jineth Contreras Salinas  
 **Grupo:** 12  
-**Docente:** Aharon Alexander Aguas  
 **Institución:** Institución Universitaria Digital de Antioquia  
 **Año:** 2026  
 
@@ -27,8 +26,8 @@ OLTP RRHH (SQL Server)
 
 | Tecnología | Versión | Uso |
 |---|---|---|
-| SQL Server | 2019 | Motor de base de datos |
-| Docker | Latest | Contenedor SQL Server |
+| SQL Server | 2019 / 2022 | Motor de base de datos (probado en 2022) |
+| Docker | 24+ | Contenedor SQL Server |
 | DBeaver Community | 26.0 | Cliente SQL |
 | Ubuntu Linux | 24.04 LTS | Sistema operativo |
 | VS Code | Latest | Editor de scripts |
@@ -37,7 +36,7 @@ OLTP RRHH (SQL Server)
 
 ## 📁 Estructura del Repositorio
 ```
-Ev4_BI_RRHH_TalentCorp/
+talentcorp-hr-data-warehouse/
 ├── README.md                          # Este archivo
 ├── scripts/                           # Scripts SQL en orden de ejecución
 │   ├── 01_Crear_RRHH_OLTP.sql        # BD operacional: 9 tablas, esquemas hr/sec, DDM, roles
@@ -57,6 +56,45 @@ Ev4_BI_RRHH_TalentCorp/
     ├── ER_OLTP_RRHH_TalentCorp.jpg         # Diagrama entidad-relación del OLTP
     └── Modelo_Estrella_Dimensiones_y_Hechos.jpg  # Star Schema del DWH
 ```
+
+---
+
+## 🗺️ Diagramas
+
+### Modelo entidad-relación del OLTP
+![Diagrama entidad-relación del OLTP de RRHH: 9 tablas con Empleados al centro, esquemas hr y sec, columnas enmascaradas y calculadas](diagramas/ER_OLTP_RRHH_TalentCorp.jpg)
+
+### Modelo estrella del Data Warehouse
+![Modelo estrella de RRHH_DW: 4 tablas de hechos (ausencias, evaluaciones, capacitaciones y headcount) conectadas a 6 dimensiones](diagramas/Modelo_Estrella_Dimensiones_y_Hechos.jpg)
+
+---
+
+## ▶️ Cómo ejecutarlo
+
+### 1. Levantar SQL Server en Docker
+```bash
+docker run -d --name talentcorp-sql \
+  -e ACCEPT_EULA=Y \
+  -e "MSSQL_SA_PASSWORD=<tu_contraseña_segura>" \
+  -p 1433:1433 \
+  -v "$PWD/scripts":/scripts:ro \
+  mcr.microsoft.com/mssql/server:2022-latest
+```
+La contraseña debe tener al menos 8 caracteres con mayúsculas, minúsculas, números y símbolos. El contenedor tarda unos 20-30 segundos en aceptar conexiones.
+
+### 2. Ejecutar los scripts
+Con `sqlcmd` dentro del contenedor (el flag `-I` activa `QUOTED_IDENTIFIER`, necesario para las columnas calculadas e índices):
+```bash
+for f in 01_Crear_RRHH_OLTP 02_Poblar_RRHH_OLTP 03_Crear_RRHH_DWH 04_Crear_Dimensiones \
+         05_Crear_Hechos 06_ETL_Poblar_DimTiempo 07_ETL_Cargar_Dimensiones \
+         08_ETL_Cargar_Hechos 09_Validaciones_DWH 10_Consultas_Analiticas; do
+  docker exec talentcorp-sql /opt/mssql-tools18/bin/sqlcmd -C -I -b \
+    -S localhost -U sa -P "<tu_contraseña_segura>" -i "/scripts/$f.sql" || break
+done
+```
+También se pueden abrir y ejecutar en orden desde DBeaver (conexión a `localhost:1433`, usuario `sa`).
+
+Resultado esperado: las validaciones críticas de `09_Validaciones_DWH.sql` pasan y el DWH queda con 84 ausencias, 80 evaluaciones y 1.320 snapshots de headcount. VAL-08 se reporta como alerta informativa (empleados sin evaluación en el período).
 
 ---
 
@@ -168,7 +206,6 @@ Ev4_BI_RRHH_TalentCorp/
 - Kimball, R., & Ross, M. (2013). *The data warehouse toolkit* (3.a ed.). Wiley.
 - Inmon, W. H. (2005). *Building the data warehouse* (4.a ed.). Wiley.
 - Microsoft Corporation. (2024). *SQL Server documentation*. https://docs.microsoft.com/en-us/sql/sql-server/
-- Anthropic. (2026). *Claude* [Modelo de lenguaje de IA]. https://claude.ai
 
 ---
 
