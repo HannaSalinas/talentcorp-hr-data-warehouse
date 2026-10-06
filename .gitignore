@@ -1,0 +1,9 @@
+# Sistema operativo y editores
+.DS_Store
+.vscode/
+.idea/
+
+# Respaldos y archivos locales de SQL Server
+*.bak
+*.mdf
+*.ldf
