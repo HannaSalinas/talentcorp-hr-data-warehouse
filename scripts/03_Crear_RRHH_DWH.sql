@@ -642,6 +642,10 @@ RETURN
         IS_ROLEMEMBER('DWH_Admin')   = 1
         OR IS_ROLEMEMBER('DWH_Analyst') = 1
         OR IS_ROLEMEMBER('DWH_ETL')  = 1
+        -- dbo (propietario de la BD) ejecuta el ETL: si la política lo
+        -- filtrara, el SCD Tipo 2 no vería las versiones vigentes y las
+        -- duplicaría. No se puede agregar dbo a un rol (error 15405).
+        OR USER_NAME() = 'dbo'
         -- DWH_Viewer solo ve su departamento (nombre = login del usuario)
         OR @Departamento = USER_NAME();
 GO
