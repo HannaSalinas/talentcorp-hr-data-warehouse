@@ -96,6 +96,12 @@ PRINT 'VAL-03 — Ausencias: OLTP=' + CAST(@V03_OLTP AS VARCHAR)
 IF @V03_Diff > 0
     RAISERROR('❌ VAL-03 CRÍTICA: %d ausencias del OLTP no llegaron al DWH.',
               16, 1, @V03_Diff);
+ELSE IF @V03_Diff < 0
+BEGIN
+    SET @V03_Diff = -@V03_Diff;
+    RAISERROR('❌ VAL-03 CRÍTICA: el DWH tiene %d ausencias de más (posibles duplicados).',
+              16, 1, @V03_Diff);
+END
 ELSE
     PRINT '✓ VAL-03 PASÓ: Conteo de ausencias OLTP = DWH';
 GO
@@ -118,6 +124,12 @@ PRINT 'VAL-04 — Evaluaciones: OLTP=' + CAST(@V04_OLTP AS VARCHAR)
 IF @V04_Diff > 0
     RAISERROR('❌ VAL-04 CRÍTICA: %d evaluaciones del OLTP no llegaron al DWH.',
               16, 1, @V04_Diff);
+ELSE IF @V04_Diff < 0
+BEGIN
+    SET @V04_Diff = -@V04_Diff;
+    RAISERROR('❌ VAL-04 CRÍTICA: el DWH tiene %d evaluaciones de más (posibles duplicados).',
+              16, 1, @V04_Diff);
+END
 ELSE
     PRINT '✓ VAL-04 PASÓ: Conteo de evaluaciones OLTP = DWH';
 GO
